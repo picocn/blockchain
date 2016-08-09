@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% block title %}
+    银行操作台
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li class="active"><a href="#">待受理订单<span class="sr-only">(current)</span></a></li>
+            <li><a href="#">已放款未还款订单</a></li>
+            <li><a href="#">已完成订单</a></li>
+            <li><a href="#">统计分析</a></li>
+          </ul>
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          <h1 class="page-header">待受理订单</h1>
+
+          <div class="row placeholders">
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="/static/img/order.jpg" class="img-responsive" alt="Orders">
+              <h4>Orders</h4>
+              <span class="text-muted">Orders to be settle</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="/static/img/cash.png" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="/static/img/payback.jpg" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+            <div class="col-xs-6 col-sm-3 placeholder">
+              <img src="/static/img/search.png" class="img-responsive" alt="Generic placeholder thumbnail">
+              <h4>Label</h4>
+              <span class="text-muted">Something else</span>
+            </div>
+          </div>
+
+          <h2 class="sub-header">订单列表</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>经销商</th>
+                  <th>车型</th>
+                  <th>数量</th>
+                  <th>金额</th>
+                  <th>查看详细</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for car in cars %}
+                <tr>
+                  <td>{{ car.id }}  </td>
+                  <td>{{ car.dealer }}  </td>
+                  <td>{{ car.model }}  </td>
+                  <td>{{  car.number }}</td>
+                  <td>{{car.amount }}</td>
+                  <td><a href="bank/car/{{ car.id }}"> 查看 </a></td>
+                </tr>
+              {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endblock %}
