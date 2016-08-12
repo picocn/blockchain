@@ -19,6 +19,8 @@ from af import views
 
 urlpatterns = [
     url(r'^$',views.index),
-    url(r'^bank$',views.bankidx),
+    url(r'^bank/',views.bankidx),
+    url(r'^dealer/$',views.dealeridx),
+    url(r'^dealer/makeorder/',views.dealer_makeorder),
     url(r'^admin/', admin.site.urls),
 ]

@@ -47,8 +47,8 @@
                 <tr>
                   <th>#</th>
                   <th>经销商</th>
+                  <th>车厂</th>
                   <th>车型</th>
-                  <th>数量</th>
                   <th>金额</th>
                   <th>查看详细</th>
                 </tr>
@@ -58,8 +58,8 @@
                 <tr>
                   <td>{{ car.id }}  </td>
                   <td>{{ car.dealer }}  </td>
+                  <td>{{  car.factory  }}</td>
                   <td>{{ car.model }}  </td>
-                  <td>{{  car.number }}</td>
                   <td>{{car.amount }}</td>
                   <td><a href="bank/car/{{ car.id }}"> 查看 </a></td>
                 </tr>
