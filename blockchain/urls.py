@@ -18,9 +18,11 @@ from django.contrib import admin
 from af import views
 
 urlpatterns = [
-    url(r'^$',views.index),
-    url(r'^bank/',views.bankidx),
-    url(r'^dealer/$',views.dealeridx),
-    url(r'^dealer/makeorder/',views.dealer_makeorder),
+    url(r'^$', views.index),
+    url(r'^bank/$', views.bankidx),
+    url(r'^bank/grantloan/(?P<orderid>\w+\d+)/$', views.grantloan),
+    url(r'^dealer/$', views.dealeridx),
+    url(r'^dealer/makeorder/', views.dealer_makeorder),
+    url(r'^dealer/orderlist/', views.dealer_orderlist),
     url(r'^admin/', admin.site.urls),
 ]
