@@ -11,3 +11,9 @@ class Order(forms.Form):
     OrderID = forms.CharField(label="唯一订单号",initial="20160810")
     LoanBank = forms.ChoiceField(label="贷款银行",choices=(("cib","兴业银行"),("spdb","浦发银行"),("ccb","建设银行")))
     LoanContractID =forms.CharField(label='贷款合同编号')
+
+
+class Transaction(models.Model):
+    Participant = models.CharField(max_length=30)
+    TransID = models.CharField(max_length=60)
+    TransDate = models.DateField(auto_now_add=True)

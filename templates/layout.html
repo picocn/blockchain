@@ -43,10 +43,10 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Participant</a></li>
+            <li><a href="#">{{ participant }}</a></li>
             <li><a href="#">Settings</a></li>
             <li><a href="#">Profile</a></li>
-            <li><a href="#">Help</a></li>
+            <li><a href="/status">状态</a></li>
           </ul>
           <form class="navbar-form navbar-right">
             <input class="form-control" placeholder="Search..." type="text">
@@ -62,9 +62,9 @@
           <ul class="nav nav-sidebar">
             <li><a href="/bank">银行界面 <span class="sr-only">(current)</span></a></li>
             <li><a href="/dealer">经销商界面</a></li>
-            <li><a href="/bank">车厂界面</a></li>
-            <li><a href="#">物流界面</a></li>
-            <li><a href="#">监管仓库界面</a></li>
+            <li><a href="/manufacturer">车厂界面</a></li>
+            <li><a href="/logistics">物流监管界面</a></li>
+            <li><a href="/status">状态</a></li>
           </ul>
 
         </div>
@@ -89,8 +89,8 @@
             </div>
             <div class="col-xs-6 col-sm-3 placeholder">
               <img data-src="holder.js/200x200/auto/vine" class="img-responsive" alt="第三方监管（物流）">
-              <h4>监管方</h4>
-              <span class="text-muted">仓库监管</span>
+              <h4>物流监管方</h4>
+              <span class="text-muted">物流信息维护、仓库监管</span>
             </div>
           </div>
 

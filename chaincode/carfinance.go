@@ -196,7 +196,7 @@ func (t *SimpleChaincode) create_Order(stub *shim.ChaincodeStub, caller string, 
 }
 
 //=================================================================================================================================
-//	 get_vehicle_details
+//	 get_vehicle_details only holder or dealer to find requested order
 //=================================================================================================================================
 func (t *SimpleChaincode) get_vehicle_details(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation string) ([]byte, error) {
 
@@ -207,8 +207,8 @@ func (t *SimpleChaincode) get_vehicle_details(stub *shim.ChaincodeStub, v Vehicl
 	}
 
 	if v.Holder == caller ||
-		v.Dealer == caller ||
-		caller_affiliation == BANK {
+		(v.Dealer == caller &&
+			v.Status == STATE_INIT) {
 
 		return bytes, nil
 	} else {
@@ -330,6 +330,12 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 
 		return t.get_vehicle_details(stub, v, caller, caller_affiliation)
 
+	} else if function == "get_all_vehicles" {
+		return t.get_all_vehicles(stub, caller, caller_affiliation)
+	} else if function == "get_repay_vehicles" {
+
+		return t.get_repay_vehicles(stub, caller, caller_affiliation)
+
 	} else if function == "get_vehicles" {
 		return t.get_vehicles(stub, caller, caller_affiliation)
 	}
@@ -365,25 +371,27 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 			fmt.Printf("INVOKE: Error retrieving order: %s", err)
 			return nil, errors.New("Error retrieving order")
 		}
+		var rec_affiliation string
+		if strings.Contains(function, "update") == false {
+			ecert, err := t.get_ecert(stub, args[2])
 
-		ecert, err := t.get_ecert(stub, args[2])
+			if err != nil {
+				return nil, err
+			}
+			rec_affiliation, err = t.check_affiliation(stub, string(ecert))
 
-		if err != nil {
-			return nil, err
-		}
-		rec_affiliation, err := t.check_affiliation(stub, string(ecert))
-
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
 		}
 		if function == "bank_confirm_order" {
 			return t.bank_confirm_order(stub, v, caller, caller_affiliation, args[2], rec_affiliation)
 		} else if function == "bank_confirm_deliver" {
 			return t.bank_confirm_deliver(stub, v, caller, caller_affiliation, args[2], rec_affiliation)
 		} else if function == "manufacturer_deliver" {
-			return t.manufacturer_deliver(stub, v, caller, caller_affiliation, args[2], rec_affiliation)
+			return t.manufacturer_deliver(stub, v, caller, caller_affiliation, args[2], rec_affiliation, args[3])
 		} else if function == "logistics_deliver" {
-			return t.logistics_deliver(stub, v, caller, caller_affiliation, args[2], rec_affiliation)
+			return t.logistics_deliver(stub, v, caller, caller_affiliation, v.Dealer, rec_affiliation)
 		} else if function == "update_state_repayment" {
 			return t.update_state_repayment(stub, v, caller, caller_affiliation)
 		} else if function == "update_loc" {
@@ -432,15 +440,15 @@ func (t *SimpleChaincode) bank_confirm_order(stub *shim.ChaincodeStub, v Vehicle
 //=================================================================================================================================
 //	 manufacturer deliver
 //=================================================================================================================================
-func (t *SimpleChaincode) manufacturer_deliver(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-
+func (t *SimpleChaincode) manufacturer_deliver(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string, carID string) ([]byte, error) {
+	fmt.Printf("MANUFACTURER DELIVER: carid=%s\n", carID)
 	if v.Status == STATE_LOANTRANSFERED &&
 		v.Holder == caller &&
 		caller_affiliation == MANUFACTURER &&
 		recipient_affiliation == LOGISTICS { // If the roles and users are ok
 		v.Holder = recipient_name // then make the owner the new owner
 		v.Status = STATE_SHIPPING // and mark it in the state of DELIVER
-
+		v.CarID = carID           //add CAR ID
 	} else { // Otherwise if there is an error
 
 		fmt.Printf("DELIVER: Permission Denied")
@@ -519,6 +527,7 @@ func (t *SimpleChaincode) logistics_deliver(stub *shim.ChaincodeStub, v Vehicle,
 	if v.Status == STATE_LOANRETURNED &&
 		v.Holder == caller &&
 		caller_affiliation == LOGISTICS &&
+		recipient_name == v.Dealer && //destination should be the dealer made order
 		recipient_affiliation == DEALER { // If the roles and users are ok
 		v.Holder = recipient_name // then make the owner the new owner
 		v.Status = STATE_FINISHED // and mark it in the state of DELIVER
@@ -687,6 +696,150 @@ func (t *SimpleChaincode) check_affiliation(stub *shim.ChaincodeStub, cert strin
 	affiliation := res[1]
 	fmt.Println(affiliation)
 	return affiliation, nil
+}
+
+//get all vehicles
+//=================================================================================================================================
+//	 get_vehicle_details
+//=================================================================================================================================
+func (t *SimpleChaincode) get_all_vehicle_details(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation string) ([]byte, error) {
+
+	bytes, err := json.Marshal(v)
+
+	if err != nil {
+		return nil, errors.New("GET_VEHICLE_DETAILS: Invalid vehicle object")
+	}
+
+	if ((v.Status == STATE_LOANTRANSFERED || v.Status == STATE_SHIPPING ||
+		v.Status == STATE_LOANRETURNED || v.Status == STATE_FINISHED) &&
+		v.Factory == caller) ||
+		v.LoanBank == caller ||
+		v.Dealer == caller {
+
+		return bytes, nil
+	} else {
+		return nil, errors.New("Permission Denied")
+	}
+
+}
+
+//=================================================================================================================================
+//	 get_vehicle_details
+//=================================================================================================================================
+
+func (t *SimpleChaincode) get_all_vehicles(stub *shim.ChaincodeStub, caller string, caller_affiliation string) ([]byte, error) {
+
+	bytes, err := stub.GetState("OrderIDs")
+
+	if err != nil {
+		return nil, errors.New("Unable to get OrderIDs")
+	}
+
+	var OrderIDs Order_Holder
+
+	err = json.Unmarshal(bytes, &OrderIDs)
+	fmt.Println(OrderIDs)
+
+	if err != nil {
+		return nil, errors.New("Corrupt Order_Holder")
+	}
+
+	result := "["
+
+	var temp []byte
+	var v Vehicle
+
+	for _, OrderID := range OrderIDs.Orders {
+
+		v, err = t.retrieve_car(stub, OrderID)
+
+		if err != nil {
+			return nil, errors.New("Failed to retrieve car")
+		}
+
+		temp, err = t.get_all_vehicle_details(stub, v, caller, caller_affiliation)
+
+		if err == nil {
+			result += string(temp) + ","
+		}
+	}
+
+	if len(result) == 1 {
+		result = "[]"
+	} else {
+		result = result[:len(result)-1] + "]"
+	}
+
+	return []byte(result), nil
+}
+
+//repayment list
+func (t *SimpleChaincode) get_repay_vehicle_details(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation string) ([]byte, error) {
+
+	bytes, err := json.Marshal(v)
+
+	if err != nil {
+		return nil, errors.New("GET_VEHICLE_DETAILS: Invalid vehicle object")
+	}
+
+	if (v.LoanBank == caller) &&
+		(v.Status == STATE_SHIPPING) {
+
+		return bytes, nil
+	} else {
+		return nil, errors.New("Permission Denied")
+	}
+
+}
+
+//=================================================================================================================================
+//	 get_vehicle_details
+//=================================================================================================================================
+
+func (t *SimpleChaincode) get_repay_vehicles(stub *shim.ChaincodeStub, caller string, caller_affiliation string) ([]byte, error) {
+
+	bytes, err := stub.GetState("OrderIDs")
+
+	if err != nil {
+		return nil, errors.New("Unable to get OrderIDs")
+	}
+
+	var OrderIDs Order_Holder
+
+	err = json.Unmarshal(bytes, &OrderIDs)
+	fmt.Println(OrderIDs)
+
+	if err != nil {
+		return nil, errors.New("Corrupt Order_Holder")
+	}
+
+	result := "["
+
+	var temp []byte
+	var v Vehicle
+
+	for _, OrderID := range OrderIDs.Orders {
+
+		v, err = t.retrieve_car(stub, OrderID)
+
+		if err != nil {
+			return nil, errors.New("Failed to retrieve car")
+		}
+
+		temp, err = t.get_repay_vehicle_details(stub, v, caller, caller_affiliation)
+
+		if err == nil {
+			result += string(temp) + ","
+		}
+	}
+
+	if len(result) == 1 {
+		result = "[]"
+	} else {
+		result = result[:len(result)-1] + "]"
+	}
+
+	return []byte(result), nil
 }
 
 //=================================================================================================================================

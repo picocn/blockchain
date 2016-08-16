@@ -1,20 +1,15 @@
 {% extends 'layout.html' %}
 {% block title %}
-    经销商操作台
+    物流监管操作台
 {% endblock %}
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" xmlns="http://www.w3.org/1999/html">
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li><a href="/dealer/makeorder">生成订单</a></li>
-             {% if allorder %}
-            <li ><a href="/dealer/orderlist">查看已提交订单</a></li>
-            <li class="active"><a href="/dealer/allorderlist">全部订单<span class="sr-only">(current)</span></a></li>
-              {% else %}
-              <li class="active"><a href="/dealer/orderlist">查看已提交订单<span class="sr-only">(current)</span></a></li>
-            <li><a href="/dealer/allorderlist">全部订单</a></li>
-              {% endif %}
+
+            <li ><a href="/logistics">交货管理</li>
+            <li class="active"><a href="/logistics/geo">地理位置更新<span class="sr-only">(current)</span></a></li>
             <li><a href="#">统计分析</a></li>
           </ul>
         </div>
@@ -31,27 +26,34 @@
                   <th>经销商</th>
                   <th>车厂</th>
                   <th>车型</th>
-                  <th>贷款金额</th>
+                  <th>车架号</th>
                   <th>当前位置</th>
                   <th>当前状态</th>
+                  <th>更新位置</th>
                 </tr>
               </thead>
               <tbody>
               {% for car in orders %}
                 <tr>
+                  <form action="/logistics/updategeo/{{ car.OrderID }}" method="GET" id="{{ car.OrderID }}_form">
                   <td>{{ car.OrderID }}  </td>
                   <td>{{ car.Dealer }}  </td>
                   <td>{{  car.Factory  }}</td>
                   <td>{{ car.Model }}  </td>
-                  <td>{{car.Price }}</td>
-                  <td>{{ car.Location}}</td>
+                  <td>{{car.CarID }}</td>
+                  <td><input type="text" id="newgeo" name="newgo" value="{{ car.Location}}"></td>
                   <td>{% if car.Status == 0 %} 待放款
                        {% elif car.Status == 1 %}已放款
                       {% elif car.Status == 3 %}已发车
-                      {% elif car.Status == 4 %}已还款
+                      {% elif cat.Status == 4 %}已还款
                       {% elif car.Status == 5 %}已交车
                       {% else %}状态未知
                   {% endif %}</td>
+                   <td>{% if car.Status == 4 or car.Status == 3 %}
+                        <a href="javascript:document:{{ car.OrderID }}_form.submit();">修改</a>
+                        {% endif %}
+                   </td>
+                  </form>
                 </tr>
               {% endfor %}
 

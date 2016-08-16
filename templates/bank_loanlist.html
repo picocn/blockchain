@@ -7,8 +7,8 @@
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li class="active"><a href="/bank">放款申请订单<span class="sr-only">(current)</span></a></li>
-            <li><a href="/bank/loanlist">还款确认</a></li>
+            <li><a href="/bank">放款申请订单</a></li>
+            <li class="active"><a href="/bank/loanlist">还款确认<span class="sr-only">(current)</span></a></li>
             <li><a href="/bank/orderlist">全部订单</a></li>
             <li><a href="#">统计分析</a></li>
           </ul>
@@ -24,10 +24,11 @@
                   <th>经销商</th>
                   <th>车厂</th>
                   <th>车型</th>
+                  <th>车架号</th>
                   <th>贷款金额</th>
                   <th>当前位置</th>
                   <th>当前状态</th>
-                  <th>发放贷款</th>
+                  <th>回款确认</th>
                 </tr>
               </thead>
               <tbody>
@@ -37,6 +38,7 @@
                   <td>{{ car.Dealer }}  </td>
                   <td>{{  car.Factory  }}</td>
                   <td>{{ car.Model }}  </td>
+                  <td>{{ car.CarID }}</td>
                   <td>{{car.Price }}</td>
                   <td>{{ car.Location}}</td>
                   <td>{% if car.Status == 0 %} 待放款
@@ -47,7 +49,7 @@
                       {% else %}状态未知
                   {% endif %}
                   </td>
-                  <td>{% if car.Status == 0 %}<a href="grantloan/{{ car.OrderID }}"> 发放贷款 </a>{% endif %}</td>
+                  <td>{% if car.Status == 3 %}<a href="/bank/returnloan/{{ car.OrderID }}"> 确认回款 </a>{% endif %}</td>
                 </tr>
               {% endfor %}
 

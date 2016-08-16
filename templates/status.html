@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% block title %}
+    系统状态
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li><a href="/bank">银行界面 </a></li>
+            <li><a href="/dealer">经销商界面</a></li>
+            <li><a href="/manufacturer">车厂界面</a></li>
+            <li><a href="/logistics">物流监管界面</a></li>
+            <li class="active"><a href="/status">状态<span class="sr-only">(current)</span></a></li>
+          </ul>
+        </div>
+
+        <div class="col-sm-12 col-sm-offset-3 col-md-10 col-md-offset-2 main" >
+          <div class="col-sm-12 ">
+          <h1 class="page-header">区块状态</h1>
+              <h3 class="sub-header">当前区块数量</h3>
+               {{ chain.height }}
+              <h3 class="sub-header">上一区块哈希值</h3>
+              {{ chain.previousBlockHash }}
+              <h3 class="sub-header">当前区块哈希值</h3>
+              {{ chain.currentBlockHash }}
+          </div>
+          <div class="col-sm-12 ">
+
+          </div>
+
+        </div>
+        </div>
+      </div>
+{% endblock %}
