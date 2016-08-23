@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block title %}
+    系统状态
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li><a href="/bank">银行界面 </a></li>
+            <li><a href="/dealer">经销商界面</a></li>
+            <li><a href="/manufacturer">车厂界面</a></li>
+            <li><a href="/logistics">物流监管界面</a></li>
+            <li class="active"><a href="/translist">交易列表<span class="sr-only">(current)</span></a></li>
+            <li><a href="/status">区块状态</a></li>
+          </ul>
+        </div>
+
+        <div class="col-sm-12 col-sm-offset-3 col-md-10 col-md-offset-2 main" >
+          <h2 class="sub-header">交易列表</h2>
+          <div class="table-responsive">
+             <table class="table table-striped" align="left">
+              <thead>
+                <tr>
+                  <th>序号#</th>
+                  <th>交易提交人</th>
+                  <th>操作类型</th>
+                  <th>交易唯一ID</th>
+                  <th>时间戳</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for tran in trans %}
+                <tr>
+                  <td>{{ tran.id }}  </td>
+                  <td>{{ tran.Participant }}  </td>
+                  <td>{{ tran.Action  }}</td>
+                  <td><a href="/transdetail/?uuid={{ tran.TransID }}"> {{ tran.TransID }} </a></td>
+                  <td>{{ tran.TransDate }}</td>
+
+                </tr>
+              {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+
+
+        </div>
+        </div>
+      </div>
+{% endblock %}

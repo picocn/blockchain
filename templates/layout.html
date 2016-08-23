@@ -46,10 +46,11 @@
             <li><a href="#">{{ participant }}</a></li>
             <li><a href="#">Settings</a></li>
             <li><a href="#">Profile</a></li>
-            <li><a href="/status">状态</a></li>
+            <li><a href="/status">区块链状态</a></li>
           </ul>
-          <form class="navbar-form navbar-right">
-            <input class="form-control" placeholder="Search..." type="text">
+          <form class="navbar-form navbar-right" action="/transdetail/" method="POST">
+              {% csrf_token %}
+            <input class="form-control" placeholder="Search..." type="text" id="uuid", name="uuid">
           </form>
         </div>
       </div>
@@ -64,7 +65,8 @@
             <li><a href="/dealer">经销商界面</a></li>
             <li><a href="/manufacturer">车厂界面</a></li>
             <li><a href="/logistics">物流监管界面</a></li>
-            <li><a href="/status">状态</a></li>
+            <li><a href="/translist">交易列表</a></li>
+            <li><a href="/status">区块状态</a></li>
           </ul>
 
         </div>
@@ -99,7 +101,9 @@
         </div>
       </div>
     <div class="row placeholders">
+    <div class="col-sm-12 col-sm-offset-3 col-md-10 col-md-offset-2 main" >
     <img src="/static/img/cover.jpg" align="center">
+    </div>
     </div>
 
     {% endblock %}

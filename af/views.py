@@ -4,11 +4,30 @@ from django.http import HttpResponseRedirect
 from af import models
 import json
 import requests
+import time
+
 
 
 # Create your views here.
+
+def initapp(request):
+    url = "http://192.168.73.129:5000/registrar"
+    data = '''{ "enrollId": "cib", "enrollSecret": "NOE63pEQbL25"}'''
+    r = requests.post(url, data=data)
+    print(r.text)
+    url = "http://192.168.73.129:5000/chaincode"
+    data = '''{"jsonrpc": "2.0","method": "deploy",
+        "params": {"type": 1,"chaincodeID": {"name": "mycc"},
+                    "ctorMsg": {"function": "init","args": ["192.168.73.129:5000"]},
+                    "secureContext": "cib"
+                    },
+        "id": 3
+        }'''
+    rr = requests.post(url,data=data)
+    print(rr.text)
+    return render(request, "layout.html", {"participant": "Participant"})
+
 def index(request):
-    # return HttpResponse(u"欢迎光临 自强学堂!")
     return render(request, "layout.html",{"participant":"Participant"})
 
 
@@ -29,10 +48,15 @@ def bankidx(request):
                    "ctorMsg": {"function":"get_vehicles","args":["cib"]},"secureContext":"cib"},
                     "id": 300}'''
     rr = requests.post(url, data=data)
-    result= json.loads(rr.text)
-    orders= json.loads(result["result"]["message"])
-    print(orders)
-    return render(request, 'bank.html', {"orders": orders, "participant":"兴业银行"})
+    print(rr.status_code)
+    print(rr.text)
+    if rr.status_code == 200:
+        result= json.loads(rr.text)
+        orders= json.loads(result["result"]["message"])
+        print(orders)
+        return render(request, 'bank.html', {"orders": orders, "participant":"兴业银行"})
+    else:
+        return render(request, 'bank.html', { "participant": "兴业银行"})
 
 def returnloan(request,orderid):
     print(orderid)
@@ -45,7 +69,9 @@ def returnloan(request,orderid):
     data += orderid + "\"" + ''']},"secureContext":"cib"},
              "id": 302}'''
     rr = requests.post(url, data=data)
-    print(data)
+    msgid = json.loads(rr.text)["result"]["message"]
+    tx = models.Transaction(Participant="cib",Action="确认还款",TransID=msgid)
+    tx.save()
     return HttpResponseRedirect("/bank/loanlist")
 
 def bank_orderlist(request):
@@ -82,7 +108,9 @@ def grantloan(request, orderid):
     data += orderid+ "\","+'''"faw"]},"secureContext":"cib"},
          "id": 300}'''
     rr = requests.post(url, data=data)
-    print(data)
+    msgid = json.loads(rr.text)["result"]["message"]
+    tx = models.Transaction(Participant="cib", Action="贷款发放", TransID=msgid)
+    tx.save()
     return HttpResponseRedirect("/bank")
 
 def dealeridx(request):
@@ -99,11 +127,7 @@ def dealeridx(request):
     orders= json.loads(result["result"]["message"])
     print(type(orders))
     form = models.Order()
-    # cars = [{"id": 1, "dealer": "福州永达", "model": "audi A6L", "factory": "Volkswagen", "amount": 1000},
-    #         {"id": 2, "dealer": "福州永达", "model": "audi A6L", "factory": "Volkswagen", "amount": 1000},
-    #         {"id": 3, "dealer": "福州永达", "model": "audi A6L", "factory": "Volkswagen", "amount": 1000},
-    #         {"id": 4, "dealer": "福州永达", "model": "audi A6L", "factory": "Volkswagen", "amount": 1000},
-    #         {"id": 5, "dealer": "福州永达", "model": "audi A6L", "factory": "Volkswagen", "amount": 1000}, ]
+    #form.OrderID = time.strftime("%Y%m%d%H%M%S")
     return render(request, 'dealer.html', {"orders": orders, "form": form, "participant":"经销商"})
 
 
@@ -149,7 +173,10 @@ def dealer_makeorder(request, GET=None, POST=None):
 
         rr = requests.post(url, data=data)
         #x = json.loads(rr.text)
-        print(rr.text)
+        #print(rr.text)
+        msgid = json.loads(rr.text)["result"]["message"]
+        tx = models.Transaction(Participant="dealer", Action="订单贷款申请", TransID = msgid )
+        tx.save()
         return HttpResponseRedirect('/dealer')
 
 
@@ -223,9 +250,9 @@ def logistics_updategeo(request,orderid):
                                 "id": 123}'''
     print(data)
     rr = requests.post(url, data=data)
-    #result = json.loads(rr.text)
-    #orders = json.loads(result["result"]["message"])
-    # print(orders)
+    msgid = json.loads(rr.text)["result"]["message"]
+    tx = models.Transaction(Participant="cosco", Action="更新地理信息", TransID=msgid)
+    tx.save()
     return HttpResponseRedirect("/logistics")
 
 
@@ -236,7 +263,9 @@ def logistics_deliver(request, orderid):
     data += orderid+ "\","+'''"dealer"]},"secureContext":"cosco"},
          "id": 300}'''
     rr = requests.post(url, data=data)
-    #print(data)
+    msgid = json.loads(rr.text)["result"]["message"]
+    tx = models.Transaction(Participant="cosco", Action="发货完成", TransID=msgid)
+    tx.save()
     return HttpResponseRedirect("/logistics")
 
 
@@ -283,6 +312,9 @@ def manufacturer_orderlist(request):
 
 def manufacturer_deliver(request,orderid):
     carid = request.GET.get("carid")
+    carid = carid.strip()
+    if len(carid) == 0:
+        return HttpResponse("车架号不能为空")
     logistics_name = request.GET.get("logistics")
     url = "http://192.168.73.129:5000/chaincode"
     data = '''{"jsonrpc": "2.0","method": "invoke","params": {"type": 1,"chaincodeID":{"name":"mycc"},
@@ -295,7 +327,35 @@ def manufacturer_deliver(request,orderid):
     data+='''"]},"secureContext":"faw"},
                             "id": 222}'''
     rr = requests.post(url, data=data)
-    #result = json.loads(rr.text)
-    #orders = json.loads(result["result"]["message"])
-    # print(orders)
+    msgid = json.loads(rr.text)["result"]["message"]
+    tx = models.Transaction(Participant="faw", Action="订单发货", TransID=msgid)
+    tx.save()
     return HttpResponseRedirect("/manufacturer")
+
+
+def transdetail(request):
+    if request.method == "GET":
+        uuid = request.GET.get("uuid")
+    else:
+        uuid = request.POST["uuid"]
+    url = "http://192.168.73.129:5000/transactions/"
+    url += uuid
+    rr = requests.get(url)
+    if rr.status_code == 200:
+        cc = json.loads(rr.text)
+        chaincode= {"chaincodeID": cc["chaincodeID"],"payload":cc["payload"], "uuid":cc["uuid"],
+                "timestamp":cc["timestamp"]["seconds"], "nonce": cc["nonce"],
+                "cert": cc["cert"], "signature": cc["signature"]}
+        return render(request,"transdetail.html", {"chaincode": chaincode})
+    else:
+        return render(request,"transdetail.html", {"chaincode": None,"errormsg":"交易未找到"})
+
+
+def translist(request):
+    par = request.GET.get("participant","")
+    if par:
+        trans = models.Transaction.objects.filter(Participant=par)
+        return render(request, "translist.html", {"trans": trans})
+    else:
+        trans = models.Transaction.objects.all()
+        return render(request,"translist.html", {"trans":trans})

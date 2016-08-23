@@ -8,7 +8,7 @@
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
 
-            <li ><a href="/logistics">交货管理</li>
+            <li ><a href="/logistics">交货管理</a></li>
             <li class="active"><a href="/logistics/geo">地理位置更新<span class="sr-only">(current)</span></a></li>
             <li><a href="#">统计分析</a></li>
           </ul>
@@ -45,7 +45,7 @@
                   <td>{% if car.Status == 0 %} 待放款
                        {% elif car.Status == 1 %}已放款
                       {% elif car.Status == 3 %}已发车
-                      {% elif cat.Status == 4 %}已还款
+                      {% elif car.Status == 4 %}已还款
                       {% elif car.Status == 5 %}已交车
                       {% else %}状态未知
                   {% endif %}</td>
